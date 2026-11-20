@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monteverde Visitor Survey</title>
+<style>
+body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:16px;background:#f4f8f4;color:#1c2b1c}
+h1{font-size:1.4rem;margin:.2em 0}h2{font-size:1.1rem;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin-top:28px}
+.q{background:#fff;border-radius:10px;padding:12px;margin:10px 0;box-shadow:0 1px 3px #0002}
+.q>label{display:block;font-weight:600;margin-bottom:8px}
+label.r{display:block;font-weight:400;padding:8px 4px}
+input[type=text],input[type=number]{width:100%;padding:10px;font-size:1rem;box-sizing:border-box;border:1px solid #aaa;border-radius:6px}
+.note{background:#e8f5e9;border-left:4px solid #2e7d32;padding:12px;border-radius:6px;font-style:italic}
+button{background:#2e7d32;color:#fff;border:0;padding:14px 22px;font-size:1rem;border-radius:8px;width:100%;margin-top:16px}
+.lang{float:right}.lang button{width:auto;padding:6px 12px;margin-left:4px;background:#789}
+.lang button.on{background:#2e7d32}[hidden]{display:none!important}
+.msg{padding:16px;background:#fff3cd;border-radius:8px;margin:12px 0}
+</style></head><body>
+<div class="lang"><button id="b_en" onclick="setLang('en')">English</button><button id="b_es" onclick="setLang('es')">Español</button></div>
+<h1 id="title"></h1><p id="intro"></p>
+<form id="f" onsubmit="return false"></form>
+<div id="end" class="msg" hidden></div>
+<button id="sub" onclick="send()"></button>
+<div id="done" class="msg" hidden></div>
+
+<script>
+const URL_ENDPOINT = https://script.google.com/macros/s/AKfycbywYgI_61rh7kq7-4L5jbjpo9OYZl8VkqJM9niIXW-gtgbBZnDLgl1gfLxXwTrjKZIF/exec;
+const UI = {
+ en:{title:'Monteverde Visitor Survey',intro:'A short (~7 min), voluntary and anonymous student survey by CIEE Monteverde about your trip. We do not ask for your name or contact details. You may skip optional questions or stop at any time. Answers are used only for a student research project.',
+  sub:'Submit',end:'Thank you for your interest! Unfortunately you are not eligible for this survey.',miss:'Please answer all required questions.',done:'Thank you very much for your time. Enjoy the rest of your stay in Monteverde!'},
+ es:{title:'Encuesta a Visitantes de Monteverde',intro:'Una encuesta breve (~7 min), voluntaria y anónima, realizada por estudiantes de CIEE Monteverde sobre su viaje. No pedimos su nombre ni datos de contacto. Puede omitir las preguntas opcionales o detenerse en cualquier momento. Las respuestas se usarán solo para un proyecto de investigación estudiantil.',
+  sub:'Enviar',end:'¡Gracias por su interés! Lamentablemente, usted no es elegible para esta encuesta.',miss:'Por favor responda todas las preguntas obligatorias.',done:'¡Muchas gracias por su tiempo! Disfrute el resto de su estadía en Monteverde.'}};
+const YN=[['Yes','Yes','Sí'],['No','No','No']];
+const pkg=()=>['Package','Group'].includes(a.A5);
+const intl=()=>!/costa\s*rica/i.test(a.A1country||'');
+const flightsIncl=()=>pkg()&&a.B2P_flights=='Yes';
+const needIntl=()=>intl()&&!flightsIncl();
+const shuf=arr=>{arr=arr.slice();for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr};
+const D1=[['Same','I would still have come to Monteverde, staying the same number of nights','Habría venido de todas formas a Monteverde, con la misma cantidad de noches'],
+ ['Fewer','I would still have come, but stayed fewer nights','Habría venido, pero me habría quedado menos noches'],
+ ['No','I would not have come to Monteverde','No habría venido a Monteverde']];
+const D1o=shuf(D1).concat([['DK',"I don't know",'No sé']]);
+const Q=[
+{id:'h1',type:'h',en:'Screening',es:'Preguntas de selección'},
+{id:'S1',type:'radio',en:'Are you 18 or older?',es:'¿Tiene 18 años o más?',o:YN},
+{id:'S2',type:'radio',en:'Do you live or work in Monteverde?',es:'¿Vive o trabaja en Monteverde?',o:YN},
+{id:'S3',type:'radio',en:'Are you spending at least one night in Monteverde on this trip?',es:'¿Pasará al menos una noche en Monteverde en este viaje?',o:YN},
+{id:'hA',type:'h',en:'A. Your trip',es:'A. Su viaje'},
+{id:'A1country',type:'text',en:'In which country do you live?',es:'¿En qué país vive?'},
+{id:'A1state',type:'text',opt:1,en:'What state or province?',es:'¿Qué estado o provincia?'},
+{id:'A2adults',type:'number',en:'How many people in your travel party share the costs? Adults:',es:'¿Cuántas personas de su grupo comparten los gastos? Adultos:'},
+{id:'A2children',type:'number',en:'Children under 18:',es:'Menores de 18 años:'},
+{id:'A3',type:'number',en:'How many nights will you spend in Monteverde on this trip?',es:'¿Cuántas noches pasará en Monteverde en este viaje?'},
+{id:'A4',type:'radio',en:'Is this your first visit to Monteverde?',es:'¿Es su primera visita a Monteverde?',o:YN},
+{id:'A5',type:'radio',en:'How did you organize this trip?',es:'¿Cómo organizó este viaje?',o:[
+ ['Independent','Independently (lodging and transport booked separately)','De forma independiente (hospedaje y transporte por separado)'],
+ ['Package','Package or all-inclusive (one price covers several items)','Paquete o todo incluido (un solo precio cubre varios servicios)'],
+ ['Group','Study abroad, volunteer or school group','Grupo de estudio en el extranjero, voluntariado o escolar']]},
+{id:'hB',type:'h',en:'B. Trip costs',es:'B. Costos del viaje'},
+{id:'nB',type:'note',en:'For the next questions, please give the <b>total for your whole travel party, for your whole stay in Monteverde, in US dollars</b>. Include what you have already paid and what you still expect to pay. Your best estimate is fine.',es:'En las siguientes preguntas indique el <b>total para todo su grupo, por toda su estadía en Monteverde, en dólares estadounidenses</b>. Incluya lo que ya pagó y lo que aún espera pagar. Una estimación es suficiente.'},
+{id:'B1',type:'radio',show:()=>!pkg(),en:'What type of lodging are you staying in?',es:'¿Qué tipo de hospedaje utiliza?',o:[
+ ['Hotel','Hotel or lodge','Hotel o lodge'],['Hostel','Hostel','Hostal'],['Rental','Rental house or Airbnb','Casa de alquiler o Airbnb'],['Homestay','Homestay','Hospedaje con familia'],['Camping','Camping or other','Camping u otro']]},
+{id:'B2',type:'number',show:()=>!pkg(),en:'Total cost of lodging for your party in Monteverde, all nights (US$):',es:'Costo total del hospedaje de su grupo en Monteverde, todas las noches (US$):'},
+{id:'B2P',type:'number',show:pkg,en:'Total package price for your party (US$):',es:'Precio total del paquete para su grupo (US$):'},
+{id:'B2P_nights',type:'number',show:pkg,en:'How many nights in total does the package or program cover, including nights outside Monteverde?',es:'¿Cuántas noches en total cubre el paquete o programa, incluyendo noches fuera de Monteverde?'},
+{id:'B2P_flights',type:'radio',show:()=>pkg()&&intl(),en:'Does the package include your international flights?',es:'¿El paquete incluye sus vuelos internacionales?',o:YN},
+{id:'B3',type:'radio',en:'Where did you book your lodging or package?',es:'¿Dónde reservó su hospedaje o paquete?',o:[
+ ['Direct','Directly with the lodging, or a Costa Rican business or agency','Directamente con el hospedaje, o un negocio o agencia costarricense'],
+ ['Online','An online platform (Booking.com, Airbnb, etc.)','Una plataforma en línea (Booking.com, Airbnb, etc.)'],
+ ['HomeAgency','An agency or tour operator in my home country','Una agencia u operador turístico en mi país de origen']]},
+{id:'B4',type:'text',en:'From which town or city did you travel to reach Monteverde (the last place you stayed)?',es:'¿Desde qué pueblo o ciudad viajó para llegar a Monteverde (el último lugar donde se hospedó)?'},
+{id:'B6',type:'number',en:'Total cost of travelling from that place to Monteverde and onward or back, for your party (tickets, shuttle, fuel, and rental-car cost for the days you use it around Monteverde; enter 0 if your package already covers it) (US$):',es:'Costo total de viajar desde ese lugar hasta Monteverde y de continuar o regresar, para su grupo (boletos, shuttle, combustible y costo del carro alquilado por los días que lo use en Monteverde; ponga 0 si su paquete ya lo cubre) (US$):'},
+{id:'B7',type:'number',en:'On average, how much do you expect to spend per day on getting around inside Monteverde (taxis, buses, shuttles, fuel), for your whole party? (US$ per day; enter 0 for nothing)',es:'En promedio, ¿cuánto espera gastar por día en transporte dentro de Monteverde (taxis, buses, shuttles, combustible), para todo su grupo? (US$ por día; ponga 0 si nada)'},
+{id:'B8',type:'number',show:needIntl,en:'In total, how many nights will you spend in Costa Rica?',es:'En total, ¿cuántas noches pasará en Costa Rica?'},
+{id:'B9',type:'number',show:needIntl,en:'Total cost of your international round-trip flights for your party (US$):',es:'Costo total de sus vuelos internacionales de ida y vuelta para su grupo (US$):'},
+{id:'nB10',type:'note',en:'Optional: roughly how much will you spend in Monteverde, for your whole party and whole stay, on:',es:'Opcional: ¿cuánto gastará aproximadamente en Monteverde, para todo su grupo y toda su estadía, en:'},
+{id:'B10_food',type:'number',opt:1,en:'Food and drinks (restaurants, cafés, groceries) (US$):',es:'Comida y bebidas (restaurantes, cafés, supermercado) (US$):'},
+{id:'B10_tours',type:'number',opt:1,en:'Tours and activities (US$):',es:'Tours y actividades (US$):'},
+{id:'B10_fees',type:'number',opt:1,en:'Entrance fees to reserves and attractions (US$):',es:'Entradas a reservas y atractivos (US$):'},
+{id:'B10_shop',type:'number',opt:1,en:'Shopping and souvenirs (US$):',es:'Compras y souvenirs (US$):'},
+{id:'hC',type:'h',en:'C. Reasons for coming',es:'C. Motivos de su visita'},
+{id:'C1',type:'radio',en:'What was the main reason you chose Monteverde? (one answer)',es:'¿Cuál fue la razón principal por la que eligió Monteverde? (una respuesta)',o:[
+ ['Nature','Cloud forest, nature and wildlife','Bosque nuboso, naturaleza y vida silvestre'],
+ ['Adventure','Adventure activities (zip-lining, etc.)','Actividades de aventura (canopy, etc.)'],
+ ['Itinerary','Part of a recommended or planned itinerary','Parte de un itinerario recomendado o planeado'],
+ ['Family','Family or friends','Familia o amigos'],
+ ['Study','Study, volunteering or work','Estudio, voluntariado o trabajo'],
+ ['Other','Other','Otro']]},
+{id:'C1_other',type:'text',opt:1,show:()=>a.C1=='Other',en:'Other reason:',es:'Otra razón:'},
+{id:'C2',type:'radio',en:'How important was the cloud forest itself in your decision to visit Monteverde?',es:'¿Qué tan importante fue el bosque nuboso en su decisión de visitar Monteverde?',o:[
+ ['1','1 Not at all','1 Nada importante'],['2','2','2'],['3','3','3'],['4','4','4'],['5','5 Extremely important','5 Extremadamente importante']]},
+{id:'hD',type:'h',en:'D. A possible future for the cloud forest',es:'D. Un posible futuro para el bosque nuboso'},
+{id:'nD',type:'note',en:'Scientists expect that climate change could, in the coming decades, reduce the mist and cloud cover that make Monteverde’s forest unique. As a result, many of the orchids, mosses, frogs and birds that live only in cloud forests could disappear. The forest would still be green and protected, but it would look and feel like the ordinary forests found in many other parts of Costa Rica and Latin America. Everything else in Monteverde, including prices, hotels and activities, would stay the same as today.<br><br>People sometimes say they would change their plans and then do not. Please answer as if you were really choosing how to spend your own money and holiday time, keeping in mind other places you could visit instead.',
+ es:'Los científicos esperan que el cambio climático pueda, en las próximas décadas, reducir la neblina y la nubosidad que hacen único al bosque de Monteverde. Como resultado, muchas de las orquídeas, musgos, ranas y aves que viven solo en bosques nubosos podrían desaparecer. El bosque seguiría siendo verde y protegido, pero se vería y se sentiría como los bosques comunes de muchas otras partes de Costa Rica y América Latina. Todo lo demás en Monteverde, incluyendo precios, hoteles y actividades, seguiría igual que hoy.<br><br>A veces la gente dice que cambiaría sus planes y luego no lo hace. Por favor responda como si realmente estuviera decidiendo cómo gastar su propio dinero y tiempo de vacaciones, pensando en otros lugares que podría visitar.'},
+{id:'D1',type:'radio',en:'If Monteverde’s forest were like that when you planned this trip, what would you have done?',es:'Si el bosque de Monteverde fuera así cuando planeó este viaje, ¿qué habría hecho?',o:D1o},
+{id:'D3',type:'number',show:()=>a.D1=='Fewer',en:'How many nights would you have stayed in Monteverde instead?',es:'¿Cuántas noches se habría quedado en Monteverde en su lugar?'},
+{id:'D4',type:'radio',show:()=>a.D1=='No',en:'Where would you most likely have gone instead?',es:'¿A dónde habría ido más probablemente en su lugar?',o:[
+ ['CR','Another place in Costa Rica','Otro lugar en Costa Rica'],['Abroad','Another country','Otro país'],['Home','Stayed at home','Me habría quedado en casa'],['DK',"Don't know",'No sé']]},
+{id:'hE',type:'h',en:'E. About you',es:'E. Sobre usted'},
+{id:'E1',type:'radio',en:'Age',es:'Edad',o:['18–24','25–34','35–44','45–54','55–64','65+'].map(x=>[x,x,x])},
+{id:'E2',type:'radio',en:'Gender',es:'Género',o:[['Woman','Woman','Mujer'],['Man','Man','Hombre'],['Another','Another','Otro'],['NA','Prefer not to say','Prefiero no decir']]}
+];
+let lang=(navigator.language||'en').startsWith('es')?'es':'en', a={};
+const ineligible=()=>a.S1=='No'||a.S2=='Yes'||a.S3=='No';
+function build(){
+ document.documentElement.lang=lang;
+ title.textContent=UI[lang].title;intro.textContent=UI[lang].intro;sub.textContent=UI[lang].sub;
+ b_en.className=lang=='en'?'on':'';b_es.className=lang=='es'?'on':'';
+ f.innerHTML='';
+ Q.forEach(q=>{
+  const d=document.createElement('div');d.id='q_'+q.id;d.className=q.type=='h'?'':(q.type=='note'?'':'q');
+  const t=q[lang];
+  if(q.type=='h')d.innerHTML='<h2>'+t+'</h2>';
+  else if(q.type=='note')d.innerHTML='<div class="note">'+t+'</div>';
+  else{
+   let h='<label>'+t+(q.opt?'':' *')+'</label>';
+   if(q.type=='radio')h+=q.o.map(o=>`<label class="r"><input type="radio" name="${q.id}" value="${o[0]}" ${a[q.id]==o[0]?'checked':''}> ${o[lang=='en'?1:2]}</label>`).join('');
+   else h+=`<input type="${q.type}" ${q.type=='number'?'min="0" step="any" inputmode="decimal"':''} name="${q.id}" value="${a[q.id]??''}">`;
+   d.innerHTML=h;
+  }
+  d.onchange=e=>{if(e.target.name){a[e.target.name]=e.target.value;vis();}};
+  f.appendChild(d);
+ });
+ vis();
+}
+function vis(){
+ const bad=ineligible(); let afterS=false;
+ Q.forEach(q=>{
+  const el=document.getElementById('q_'+q.id);
+  if(q.id=='hA')afterS=true;
+  el.hidden=(afterS&&bad)||(q.show&&!q.show());
+ });
+ end.hidden=!bad;end.textContent=UI[lang].end;sub.hidden=bad;
+}
+function setLang(l){lang=l;build()}
+async function send(){
+ const vq=Q.filter(q=>!['h','note'].includes(q.type)&&!document.getElementById('q_'+q.id).hidden);
+ const miss=vq.filter(q=>!q.opt&&(a[q.id]===undefined||a[q.id]===''));
+ if(miss.length){alert(UI[lang].miss);document.getElementById('q_'+miss[0].id).scrollIntoView({behavior:'smooth'});return}
+ const data={language:lang};
+ vq.filter(q=>!q.id.startsWith('S')).forEach(q=>data[q.id]=a[q.id]??'');
+ sub.disabled=true;
+ try{await fetch(URL_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(data)});}
+ catch(e){sub.disabled=false;alert('Network error / Error de red');return}
+ f.hidden=true;sub.hidden=true;done.hidden=false;done.textContent=UI[lang].done;window.scrollTo(0,0);
+}
+build();
+</script></body></html>
