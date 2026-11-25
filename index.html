@@ -1,148 +1,303 @@
 <!DOCTYPE html>
 <html lang="en"><head><meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Monteverde Visitor Survey</title>
 <style>
-body{font-family:system-ui,sans-serif;max-width:640px;margin:0 auto;padding:16px;background:#f4f8f4;color:#1c2b1c}
-h1{font-size:1.4rem;margin:.2em 0}h2{font-size:1.1rem;border-bottom:2px solid #2e7d32;padding-bottom:4px;margin-top:28px}
-.q{background:#fff;border-radius:10px;padding:12px;margin:10px 0;box-shadow:0 1px 3px #0002}
-.q>label{display:block;font-weight:600;margin-bottom:8px}
-label.r{display:block;font-weight:400;padding:8px 4px}
-input[type=text],input[type=number]{width:100%;padding:10px;font-size:1rem;box-sizing:border-box;border:1px solid #aaa;border-radius:6px}
-.note{background:#e8f5e9;border-left:4px solid #2e7d32;padding:12px;border-radius:6px;font-style:italic}
-button{background:#2e7d32;color:#fff;border:0;padding:14px 22px;font-size:1rem;border-radius:8px;width:100%;margin-top:16px}
-.lang{float:right}.lang button{width:auto;padding:6px 12px;margin-left:4px;background:#789}
-.lang button.on{background:#2e7d32}[hidden]{display:none!important}
-.msg{padding:16px;background:#fff3cd;border-radius:8px;margin:12px 0}
-</style></head><body>
-<div class="lang"><button id="b_en" onclick="setLang('en')">English</button><button id="b_es" onclick="setLang('es')">Español</button></div>
-<h1 id="title"></h1><p id="intro"></p>
-<form id="f" onsubmit="return false"></form>
-<div id="end" class="msg" hidden></div>
-<button id="sub" onclick="send()"></button>
-<div id="done" class="msg" hidden></div>
-
+:root{--bg:#f4f6f2;--card:#fff;--ink:#1b2a22;--mut:#5b6b62;--line:#d3dbd5;--acc:#1f6f4a;--ai:#fff;--sel:#e1f1e8;--warn:#a4400f}
+@media (prefers-color-scheme:dark){:root{--bg:#101913;--card:#1a2620;--ink:#e8efe9;--mut:#9fb0a6;--line:#2f4037;--acc:#5fc08f;--ai:#08130d;--sel:#21372b;--warn:#f0a070}}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;min-height:100vh}
+#app{max-width:560px;margin:0 auto;padding:14px 16px 28px}
+.top{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.bar{flex:1;height:6px;background:var(--line);border-radius:3px;overflow:hidden}
+.bar i{display:block;height:100%;background:var(--acc);transition:width .25s}
+.lang{border:1px solid var(--line);background:var(--card);color:var(--ink);border-radius:8px;padding:6px 10px;font-size:14px;cursor:pointer}
+.card{background:var(--card);border:1px solid var(--line);border-radius:16px;padding:22px 18px}
+h1{font-size:24px;line-height:1.25;margin:0 0 8px}
+.sec{font-size:13px;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);margin-bottom:8px}
+.hint{background:#e6f0e9;color:#14261c;font-size:16px;line-height:1.4;margin:0 0 14px;padding:10px 12px;border-radius:10px;border-left:4px solid #1f6f4a}.hint:empty{display:none}
+p{margin:0 0 12px}
+.opt{display:block;width:100%;text-align:left;min-height:52px;margin:0 0 10px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink);font:inherit;cursor:pointer}
+.opt.on{border-color:var(--acc);background:var(--sel);font-weight:600}
+.row{display:flex;gap:8px}.row .opt{text-align:center;padding:12px 0}
+.ends{display:flex;justify-content:space-between;color:var(--mut);font-size:15px;margin-top:-2px}
+input.f{width:100%;font:inherit;font-size:22px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+input.f:focus{outline:2px solid var(--acc);border-color:var(--acc)}
+.pre{display:flex;align-items:center;gap:8px;font-size:22px}
+.err{color:var(--warn);font-size:14px;margin-top:10px;min-height:18px}
+.nav{display:flex;gap:10px;margin-top:16px}
+.btn{flex:1;min-height:50px;border-radius:12px;font:inherit;font-weight:600;cursor:pointer;border:1.5px solid var(--acc);background:var(--acc);color:var(--ai)}
+.btn.g{background:transparent;color:var(--acc)}
+.card.scn{border-color:var(--acc);border-width:2px}
+.link{background:none;border:0;color:var(--mut);font-size:13px;text-decoration:underline;cursor:pointer;margin-top:18px}
+.st{color:var(--mut);font-size:15px;margin:12px 0 0}
+/*seg*/
+.seg{display:flex;gap:8px;margin:0 0 10px}.seg .opt{min-height:40px;margin:0;text-align:center;padding:8px 6px;font-size:15px}
+select.f{width:100%;font:inherit;font-size:22px;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;background:var(--card);color:var(--ink)}
+.echo{background:#fff6dc;color:#3a2e00;border-left:4px solid #c8960c;padding:10px 12px;border-radius:10px;margin:10px 0 0;font-size:16px;line-height:1.4;display:none}
+.flab{display:block;font-weight:600;margin:14px 0 2px}.fh{color:var(--mut);font-size:14px;margin:0 0 6px}
+.pic{margin:4px 0 14px}.picc{display:flex;justify-content:space-between;font-size:14px;color:var(--mut);margin-top:6px}.picn{font-size:12px;color:var(--mut);text-align:center;margin-top:2px}
+table{border-collapse:collapse;font-size:14px;width:100%}td{padding:4px 0;border-bottom:1px solid var(--line)}
+</style></head>
+<body>
 <script>
-const URL_ENDPOINT = https://script.google.com/macros/s/AKfycbywYgI_61rh7kq7-4L5jbjpo9OYZl8VkqJM9niIXW-gtgbBZnDLgl1gfLxXwTrjKZIF/exec;
-const UI = {
- en:{title:'Monteverde Visitor Survey',intro:'A short (~7 min), voluntary and anonymous student survey by CIEE Monteverde about your trip. We do not ask for your name or contact details. You may skip optional questions or stop at any time. Answers are used only for a student research project.',
-  sub:'Submit',end:'Thank you for your interest! Unfortunately you are not eligible for this survey.',miss:'Please answer all required questions.',done:'Thank you very much for your time. Enjoy the rest of your stay in Monteverde!'},
- es:{title:'Encuesta a Visitantes de Monteverde',intro:'Una encuesta breve (~7 min), voluntaria y anónima, realizada por estudiantes de CIEE Monteverde sobre su viaje. No pedimos su nombre ni datos de contacto. Puede omitir las preguntas opcionales o detenerse en cualquier momento. Las respuestas se usarán solo para un proyecto de investigación estudiantil.',
-  sub:'Enviar',end:'¡Gracias por su interés! Lamentablemente, usted no es elegible para esta encuesta.',miss:'Por favor responda todas las preguntas obligatorias.',done:'¡Muchas gracias por su tiempo! Disfrute el resto de su estadía en Monteverde.'}};
-const YN=[['Yes','Yes','Sí'],['No','No','No']];
-const pkg=()=>['Package','Group'].includes(a.A5);
-const intl=()=>!/costa\s*rica/i.test(a.A1country||'');
-const flightsIncl=()=>pkg()&&a.B2P_flights=='Yes';
-const needIntl=()=>intl()&&!flightsIncl();
-const shuf=arr=>{arr=arr.slice();for(let i=arr.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[arr[i],arr[j]]=[arr[j],arr[i]]}return arr};
-const D1=[['Same','I would still have come to Monteverde, staying the same number of nights','Habría venido de todas formas a Monteverde, con la misma cantidad de noches'],
- ['Fewer','I would still have come, but stayed fewer nights','Habría venido, pero me habría quedado menos noches'],
- ['No','I would not have come to Monteverde','No habría venido a Monteverde']];
-const D1o=shuf(D1).concat([['DK',"I don't know",'No sé']]);
-const Q=[
-{id:'h1',type:'h',en:'Screening',es:'Preguntas de selección'},
-{id:'S1',type:'radio',en:'Are you 18 or older?',es:'¿Tiene 18 años o más?',o:YN},
-{id:'S2',type:'radio',en:'Do you live or work in Monteverde?',es:'¿Vive o trabaja en Monteverde?',o:YN},
-{id:'S3',type:'radio',en:'Are you spending at least one night in Monteverde on this trip?',es:'¿Pasará al menos una noche en Monteverde en este viaje?',o:YN},
-{id:'hA',type:'h',en:'A. Your trip',es:'A. Su viaje'},
-{id:'A1country',type:'text',en:'In which country do you live?',es:'¿En qué país vive?'},
-{id:'A1state',type:'text',opt:1,en:'What state or province?',es:'¿Qué estado o provincia?'},
-{id:'A2adults',type:'number',en:'How many people in your travel party share the costs? Adults:',es:'¿Cuántas personas de su grupo comparten los gastos? Adultos:'},
-{id:'A2children',type:'number',en:'Children under 18:',es:'Menores de 18 años:'},
-{id:'A3',type:'number',en:'How many nights will you spend in Monteverde on this trip?',es:'¿Cuántas noches pasará en Monteverde en este viaje?'},
-{id:'A4',type:'radio',en:'Is this your first visit to Monteverde?',es:'¿Es su primera visita a Monteverde?',o:YN},
-{id:'A5',type:'radio',en:'How did you organize this trip?',es:'¿Cómo organizó este viaje?',o:[
- ['Independent','Independently (lodging and transport booked separately)','De forma independiente (hospedaje y transporte por separado)'],
- ['Package','Package or all-inclusive (one price covers several items)','Paquete o todo incluido (un solo precio cubre varios servicios)'],
- ['Group','Study abroad, volunteer or school group','Grupo de estudio en el extranjero, voluntariado o escolar']]},
-{id:'hB',type:'h',en:'B. Trip costs',es:'B. Costos del viaje'},
-{id:'nB',type:'note',en:'For the next questions, please give the <b>total for your whole travel party, for your whole stay in Monteverde, in US dollars</b>. Include what you have already paid and what you still expect to pay. Your best estimate is fine.',es:'En las siguientes preguntas indique el <b>total para todo su grupo, por toda su estadía en Monteverde, en dólares estadounidenses</b>. Incluya lo que ya pagó y lo que aún espera pagar. Una estimación es suficiente.'},
-{id:'B1',type:'radio',show:()=>!pkg(),en:'What type of lodging are you staying in?',es:'¿Qué tipo de hospedaje utiliza?',o:[
- ['Hotel','Hotel or lodge','Hotel o lodge'],['Hostel','Hostel','Hostal'],['Rental','Rental house or Airbnb','Casa de alquiler o Airbnb'],['Homestay','Homestay','Hospedaje con familia'],['Camping','Camping or other','Camping u otro']]},
-{id:'B2',type:'number',show:()=>!pkg(),en:'Total cost of lodging for your party in Monteverde, all nights (US$):',es:'Costo total del hospedaje de su grupo en Monteverde, todas las noches (US$):'},
-{id:'B2P',type:'number',show:pkg,en:'Total package price for your party (US$):',es:'Precio total del paquete para su grupo (US$):'},
-{id:'B2P_nights',type:'number',show:pkg,en:'How many nights in total does the package or program cover, including nights outside Monteverde?',es:'¿Cuántas noches en total cubre el paquete o programa, incluyendo noches fuera de Monteverde?'},
-{id:'B2P_flights',type:'radio',show:()=>pkg()&&intl(),en:'Does the package include your international flights?',es:'¿El paquete incluye sus vuelos internacionales?',o:YN},
-{id:'B3',type:'radio',en:'Where did you book your lodging or package?',es:'¿Dónde reservó su hospedaje o paquete?',o:[
- ['Direct','Directly with the lodging, or a Costa Rican business or agency','Directamente con el hospedaje, o un negocio o agencia costarricense'],
- ['Online','An online platform (Booking.com, Airbnb, etc.)','Una plataforma en línea (Booking.com, Airbnb, etc.)'],
- ['HomeAgency','An agency or tour operator in my home country','Una agencia u operador turístico en mi país de origen']]},
-{id:'B4',type:'text',en:'From which town or city did you travel to reach Monteverde (the last place you stayed)?',es:'¿Desde qué pueblo o ciudad viajó para llegar a Monteverde (el último lugar donde se hospedó)?'},
-{id:'B6',type:'number',en:'Total cost of travelling from that place to Monteverde and onward or back, for your party (tickets, shuttle, fuel, and rental-car cost for the days you use it around Monteverde; enter 0 if your package already covers it) (US$):',es:'Costo total de viajar desde ese lugar hasta Monteverde y de continuar o regresar, para su grupo (boletos, shuttle, combustible y costo del carro alquilado por los días que lo use en Monteverde; ponga 0 si su paquete ya lo cubre) (US$):'},
-{id:'B7',type:'number',en:'On average, how much do you expect to spend per day on getting around inside Monteverde (taxis, buses, shuttles, fuel), for your whole party? (US$ per day; enter 0 for nothing)',es:'En promedio, ¿cuánto espera gastar por día en transporte dentro de Monteverde (taxis, buses, shuttles, combustible), para todo su grupo? (US$ por día; ponga 0 si nada)'},
-{id:'B8',type:'number',show:needIntl,en:'In total, how many nights will you spend in Costa Rica?',es:'En total, ¿cuántas noches pasará en Costa Rica?'},
-{id:'B9',type:'number',show:needIntl,en:'Total cost of your international round-trip flights for your party (US$):',es:'Costo total de sus vuelos internacionales de ida y vuelta para su grupo (US$):'},
-{id:'nB10',type:'note',en:'Optional: roughly how much will you spend in Monteverde, for your whole party and whole stay, on:',es:'Opcional: ¿cuánto gastará aproximadamente en Monteverde, para todo su grupo y toda su estadía, en:'},
-{id:'B10_food',type:'number',opt:1,en:'Food and drinks (restaurants, cafés, groceries) (US$):',es:'Comida y bebidas (restaurantes, cafés, supermercado) (US$):'},
-{id:'B10_tours',type:'number',opt:1,en:'Tours and activities (US$):',es:'Tours y actividades (US$):'},
-{id:'B10_fees',type:'number',opt:1,en:'Entrance fees to reserves and attractions (US$):',es:'Entradas a reservas y atractivos (US$):'},
-{id:'B10_shop',type:'number',opt:1,en:'Shopping and souvenirs (US$):',es:'Compras y souvenirs (US$):'},
-{id:'hC',type:'h',en:'C. Reasons for coming',es:'C. Motivos de su visita'},
-{id:'C1',type:'radio',en:'What was the main reason you chose Monteverde? (one answer)',es:'¿Cuál fue la razón principal por la que eligió Monteverde? (una respuesta)',o:[
- ['Nature','Cloud forest, nature and wildlife','Bosque nuboso, naturaleza y vida silvestre'],
- ['Adventure','Adventure activities (zip-lining, etc.)','Actividades de aventura (canopy, etc.)'],
- ['Itinerary','Part of a recommended or planned itinerary','Parte de un itinerario recomendado o planeado'],
- ['Family','Family or friends','Familia o amigos'],
- ['Study','Study, volunteering or work','Estudio, voluntariado o trabajo'],
- ['Other','Other','Otro']]},
-{id:'C1_other',type:'text',opt:1,show:()=>a.C1=='Other',en:'Other reason:',es:'Otra razón:'},
-{id:'C2',type:'radio',en:'How important was the cloud forest itself in your decision to visit Monteverde?',es:'¿Qué tan importante fue el bosque nuboso en su decisión de visitar Monteverde?',o:[
- ['1','1 Not at all','1 Nada importante'],['2','2','2'],['3','3','3'],['4','4','4'],['5','5 Extremely important','5 Extremadamente importante']]},
-{id:'hD',type:'h',en:'D. A possible future for the cloud forest',es:'D. Un posible futuro para el bosque nuboso'},
-{id:'nD',type:'note',en:'Scientists expect that climate change could, in the coming decades, reduce the mist and cloud cover that make Monteverde’s forest unique. As a result, many of the orchids, mosses, frogs and birds that live only in cloud forests could disappear. The forest would still be green and protected, but it would look and feel like the ordinary forests found in many other parts of Costa Rica and Latin America. Everything else in Monteverde, including prices, hotels and activities, would stay the same as today.<br><br>People sometimes say they would change their plans and then do not. Please answer as if you were really choosing how to spend your own money and holiday time, keeping in mind other places you could visit instead.',
- es:'Los científicos esperan que el cambio climático pueda, en las próximas décadas, reducir la neblina y la nubosidad que hacen único al bosque de Monteverde. Como resultado, muchas de las orquídeas, musgos, ranas y aves que viven solo en bosques nubosos podrían desaparecer. El bosque seguiría siendo verde y protegido, pero se vería y se sentiría como los bosques comunes de muchas otras partes de Costa Rica y América Latina. Todo lo demás en Monteverde, incluyendo precios, hoteles y actividades, seguiría igual que hoy.<br><br>A veces la gente dice que cambiaría sus planes y luego no lo hace. Por favor responda como si realmente estuviera decidiendo cómo gastar su propio dinero y tiempo de vacaciones, pensando en otros lugares que podría visitar.'},
-{id:'D1',type:'radio',en:'If Monteverde’s forest were like that when you planned this trip, what would you have done?',es:'Si el bosque de Monteverde fuera así cuando planeó este viaje, ¿qué habría hecho?',o:D1o},
-{id:'D3',type:'number',show:()=>a.D1=='Fewer',en:'How many nights would you have stayed in Monteverde instead?',es:'¿Cuántas noches se habría quedado en Monteverde en su lugar?'},
-{id:'D4',type:'radio',show:()=>a.D1=='No',en:'Where would you most likely have gone instead?',es:'¿A dónde habría ido más probablemente en su lugar?',o:[
- ['CR','Another place in Costa Rica','Otro lugar en Costa Rica'],['Abroad','Another country','Otro país'],['Home','Stayed at home','Me habría quedado en casa'],['DK',"Don't know",'No sé']]},
-{id:'hE',type:'h',en:'E. About you',es:'E. Sobre usted'},
-{id:'E1',type:'radio',en:'Age',es:'Edad',o:['18–24','25–34','35–44','45–54','55–64','65+'].map(x=>[x,x,x])},
-{id:'E2',type:'radio',en:'Gender',es:'Género',o:[['Woman','Woman','Mujer'],['Man','Man','Hombre'],['Another','Another','Otro'],['NA','Prefer not to say','Prefiero no decir']]}
-];
-let lang=(navigator.language||'en').startsWith('es')?'es':'en', a={};
-const ineligible=()=>a.S1=='No'||a.S2=='Yes'||a.S3=='No';
-function build(){
- document.documentElement.lang=lang;
- title.textContent=UI[lang].title;intro.textContent=UI[lang].intro;sub.textContent=UI[lang].sub;
- b_en.className=lang=='en'?'on':'';b_es.className=lang=='es'?'on':'';
- f.innerHTML='';
- Q.forEach(q=>{
-  const d=document.createElement('div');d.id='q_'+q.id;d.className=q.type=='h'?'':(q.type=='note'?'':'q');
-  const t=q[lang];
-  if(q.type=='h')d.innerHTML='<h2>'+t+'</h2>';
-  else if(q.type=='note')d.innerHTML='<div class="note">'+t+'</div>';
-  else{
-   let h='<label>'+t+(q.opt?'':' *')+'</label>';
-   if(q.type=='radio')h+=q.o.map(o=>`<label class="r"><input type="radio" name="${q.id}" value="${o[0]}" ${a[q.id]==o[0]?'checked':''}> ${o[lang=='en'?1:2]}</label>`).join('');
-   else h+=`<input type="${q.type}" ${q.type=='number'?'min="0" step="any" inputmode="decimal"':''} name="${q.id}" value="${a[q.id]??''}">`;
-   d.innerHTML=h;
-  }
-  d.onchange=e=>{if(e.target.name){a[e.target.name]=e.target.value;vis();}};
-  f.appendChild(d);
- });
- vis();
-}
-function vis(){
- const bad=ineligible(); let afterS=false;
- Q.forEach(q=>{
-  const el=document.getElementById('q_'+q.id);
-  if(q.id=='hA')afterS=true;
-  el.hidden=(afterS&&bad)||(q.show&&!q.show());
- });
- end.hidden=!bad;end.textContent=UI[lang].end;sub.hidden=bad;
-}
-function setLang(l){lang=l;build()}
-async function send(){
- const vq=Q.filter(q=>!['h','note'].includes(q.type)&&!document.getElementById('q_'+q.id).hidden);
- const miss=vq.filter(q=>!q.opt&&(a[q.id]===undefined||a[q.id]===''));
- if(miss.length){alert(UI[lang].miss);document.getElementById('q_'+miss[0].id).scrollIntoView({behavior:'smooth'});return}
- const data={language:lang};
- vq.filter(q=>!q.id.startsWith('S')).forEach(q=>data[q.id]=a[q.id]??'');
- sub.disabled=true;
- try{await fetch(URL_ENDPOINT,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain'},body:JSON.stringify(data)});}
- catch(e){sub.disabled=false;alert('Network error / Error de red');return}
- f.hidden=true;sub.hidden=true;done.hidden=false;done.textContent=UI[lang].done;window.scrollTo(0,0);
-}
-build();
-</script></body></html>
+window.addEventListener('error',function(e){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b3261e;color:#fff;font:14px/1.3 sans-serif;padding:10px';d.textContent='Error: '+e.message+' (line '+e.lineno+')';document.body.appendChild(d)});
+window.addEventListener('unhandledrejection',function(e){var d=document.createElement('div');d.style.cssText='position:fixed;left:0;right:0;bottom:0;z-index:99999;background:#b3261e;color:#fff;font:14px/1.3 sans-serif;padding:10px';d.textContent='Error: '+(e.reason&&e.reason.message||e.reason);document.body.appendChild(d)});
+</script>
+<div id="app"></div>
+<script>
+/* ===== CONFIGURATION =====
+   Served by Google Apps Script (recommended): leave ENDPOINT empty.
+   Hosted elsewhere (GitHub Pages, Netlify...): paste the Apps Script web app URL (ends in /exec). */
+const ENDPOINT='https://script.google.com/macros/s/AKfycbx0xlbTRYCf6sgOUE5Yq7I1zRbAnudF53TH7e17HFcFjrpVkvQIR7cwwTXrQoXXyqo/exec';
+const CRC_PER_USD=500;   // colones per US dollar for the colones option (can be overridden in a link with &fx=520)
+const SCN_IMAGE={Severe:'',Moderate:''};   // optional: https image URLs to show on the scenario card instead of the built-in drawing
+const INJ='<?= params ?>';   // filled in by Apps Script with the link's ?loc= ?sv= ?lang= values
+let PARAMS;try{PARAMS=JSON.parse(decodeURIComponent(INJ))}catch(e){PARAMS=Object.fromEntries(new URLSearchParams(location.search))}
+const FX=(+PARAMS.fx>0)?+PARAMS.fx:CRC_PER_USD;
 
+const COUNTRIES=[["Afghanistan", "Afganistán"], ["Albania", "Albania"], ["Algeria", "Argelia"], ["Andorra", "Andorra"], ["Angola", "Angola"], ["Antigua and Barbuda", "Antigua y Barbuda"], ["Argentina", "Argentina"], ["Armenia", "Armenia"], ["Australia", "Australia"], ["Austria", "Austria"], ["Azerbaijan", "Azerbaiyán"], ["Bahamas", "Bahamas"], ["Bahrain", "Baréin"], ["Bangladesh", "Bangladés"], ["Barbados", "Barbados"], ["Belarus", "Bielorrusia"], ["Belgium", "Bélgica"], ["Belize", "Belice"], ["Benin", "Benín"], ["Bhutan", "Bután"], ["Bolivia", "Bolivia"], ["Bosnia and Herzegovina", "Bosnia y Herzegovina"], ["Botswana", "Botsuana"], ["Brazil", "Brasil"], ["Brunei", "Brunéi"], ["Bulgaria", "Bulgaria"], ["Burkina Faso", "Burkina Faso"], ["Burundi", "Burundi"], ["Cabo Verde", "Cabo Verde"], ["Cambodia", "Camboya"], ["Cameroon", "Camerún"], ["Canada", "Canadá"], ["Central African Republic", "República Centroafricana"], ["Chad", "Chad"], ["Chile", "Chile"], ["China", "China"], ["Colombia", "Colombia"], ["Comoros", "Comoras"], ["Congo (Democratic Republic)", "Congo (República Democrática)"], ["Congo (Republic)", "Congo (República)"], ["Costa Rica", "Costa Rica"], ["Côte d'Ivoire", "Costa de Marfil"], ["Croatia", "Croacia"], ["Cuba", "Cuba"], ["Cyprus", "Chipre"], ["Czechia", "Chequia"], ["Denmark", "Dinamarca"], ["Djibouti", "Yibuti"], ["Dominica", "Dominica"], ["Dominican Republic", "República Dominicana"], ["Ecuador", "Ecuador"], ["Egypt", "Egipto"], ["El Salvador", "El Salvador"], ["Equatorial Guinea", "Guinea Ecuatorial"], ["Eritrea", "Eritrea"], ["Estonia", "Estonia"], ["Eswatini", "Esuatini"], ["Ethiopia", "Etiopía"], ["Fiji", "Fiyi"], ["Finland", "Finlandia"], ["France", "Francia"], ["Gabon", "Gabón"], ["Gambia", "Gambia"], ["Georgia", "Georgia"], ["Germany", "Alemania"], ["Ghana", "Ghana"], ["Greece", "Grecia"], ["Grenada", "Granada"], ["Guatemala", "Guatemala"], ["Guinea", "Guinea"], ["Guinea-Bissau", "Guinea-Bisáu"], ["Guyana", "Guyana"], ["Haiti", "Haití"], ["Honduras", "Honduras"], ["Hong Kong", "Hong Kong"], ["Hungary", "Hungría"], ["Iceland", "Islandia"], ["India", "India"], ["Indonesia", "Indonesia"], ["Iran", "Irán"], ["Iraq", "Irak"], ["Ireland", "Irlanda"], ["Israel", "Israel"], ["Italy", "Italia"], ["Jamaica", "Jamaica"], ["Japan", "Japón"], ["Jordan", "Jordania"], ["Kazakhstan", "Kazajistán"], ["Kenya", "Kenia"], ["Kiribati", "Kiribati"], ["Kosovo", "Kosovo"], ["Kuwait", "Kuwait"], ["Kyrgyzstan", "Kirguistán"], ["Laos", "Laos"], ["Latvia", "Letonia"], ["Lebanon", "Líbano"], ["Lesotho", "Lesoto"], ["Liberia", "Liberia"], ["Libya", "Libia"], ["Liechtenstein", "Liechtenstein"], ["Lithuania", "Lituania"], ["Luxembourg", "Luxemburgo"], ["Madagascar", "Madagascar"], ["Malawi", "Malaui"], ["Malaysia", "Malasia"], ["Maldives", "Maldivas"], ["Mali", "Malí"], ["Malta", "Malta"], ["Marshall Islands", "Islas Marshall"], ["Mauritania", "Mauritania"], ["Mauritius", "Mauricio"], ["Mexico", "México"], ["Micronesia", "Micronesia"], ["Moldova", "Moldavia"], ["Monaco", "Mónaco"], ["Mongolia", "Mongolia"], ["Montenegro", "Montenegro"], ["Morocco", "Marruecos"], ["Mozambique", "Mozambique"], ["Myanmar", "Myanmar"], ["Namibia", "Namibia"], ["Nauru", "Nauru"], ["Nepal", "Nepal"], ["Netherlands", "Países Bajos"], ["New Zealand", "Nueva Zelanda"], ["Nicaragua", "Nicaragua"], ["Niger", "Níger"], ["Nigeria", "Nigeria"], ["North Korea", "Corea del Norte"], ["North Macedonia", "Macedonia del Norte"], ["Norway", "Noruega"], ["Oman", "Omán"], ["Pakistan", "Pakistán"], ["Palau", "Palaos"], ["Palestine", "Palestina"], ["Panama", "Panamá"], ["Papua New Guinea", "Papúa Nueva Guinea"], ["Paraguay", "Paraguay"], ["Peru", "Perú"], ["Philippines", "Filipinas"], ["Poland", "Polonia"], ["Portugal", "Portugal"], ["Puerto Rico", "Puerto Rico"], ["Qatar", "Catar"], ["Romania", "Rumanía"], ["Russia", "Rusia"], ["Rwanda", "Ruanda"], ["Saint Kitts and Nevis", "San Cristóbal y Nieves"], ["Saint Lucia", "Santa Lucía"], ["Saint Vincent and the Grenadines", "San Vicente y las Granadinas"], ["Samoa", "Samoa"], ["San Marino", "San Marino"], ["São Tomé and Príncipe", "Santo Tomé y Príncipe"], ["Saudi Arabia", "Arabia Saudita"], ["Senegal", "Senegal"], ["Serbia", "Serbia"], ["Seychelles", "Seychelles"], ["Sierra Leone", "Sierra Leona"], ["Singapore", "Singapur"], ["Slovakia", "Eslovaquia"], ["Slovenia", "Eslovenia"], ["Solomon Islands", "Islas Salomón"], ["Somalia", "Somalia"], ["South Africa", "Sudáfrica"], ["South Korea", "Corea del Sur"], ["South Sudan", "Sudán del Sur"], ["Spain", "España"], ["Sri Lanka", "Sri Lanka"], ["Sudan", "Sudán"], ["Suriname", "Surinam"], ["Sweden", "Suecia"], ["Switzerland", "Suiza"], ["Syria", "Siria"], ["Taiwan", "Taiwán"], ["Tajikistan", "Tayikistán"], ["Tanzania", "Tanzania"], ["Thailand", "Tailandia"], ["Timor-Leste", "Timor Oriental"], ["Togo", "Togo"], ["Tonga", "Tonga"], ["Trinidad and Tobago", "Trinidad y Tobago"], ["Tunisia", "Túnez"], ["Türkiye", "Turquía"], ["Turkmenistan", "Turkmenistán"], ["Tuvalu", "Tuvalu"], ["Uganda", "Uganda"], ["Ukraine", "Ucrania"], ["United Arab Emirates", "Emiratos Árabes Unidos"], ["United Kingdom", "Reino Unido"], ["United States", "Estados Unidos"], ["Uruguay", "Uruguay"], ["Uzbekistan", "Uzbekistán"], ["Vanuatu", "Vanuatu"], ["Vatican City", "Ciudad del Vaticano"], ["Venezuela", "Venezuela"], ["Vietnam", "Vietnam"], ["Yemen", "Yemen"], ["Zambia", "Zambia"], ["Zimbabwe", "Zimbabue"]];
+const YN=[['Yes','Yes','Sí'],['No','No','No']];
+const isCR=a=>/^(costa rica|cr)$/i.test((a.A1_Country||'').trim());
+const isDay=a=>a.VisitorType==='Day';
+const ind=a=>a.A6_Organization==='Independent';
+const party=a=>(+a.A2_Adults||0)+(+a.A2_Children||0);
+const HW=['For your whole travel party. Answer in dollars or colones (choose above). A best estimate is fine.','Para todo su grupo. Responda en dólares o colones (elija arriba). Una estimación está bien.'];
+const NT=['per night','por noche'];
+/* q.rand = options shown in a random order (fixed once per respondent); q.last = code kept at the end;
+   q.td/q.hd = title/hint used for day visitors; q.pn = per-night amount (overnight visitors may switch to "whole stay");
+   q.pk = add a reminder for package respondents */
+const Q=[
+{id:'INTRO',type:'info',nd:1,t:['Monteverde Visitor Survey','Encuesta a visitantes de Monteverde'],p:[['We are students with CIEE Monteverde doing a short survey (about 8 minutes) about your trip: how you got here, where you are staying or based and what your trip costs. It is voluntary and anonymous. We do not ask for your name or contact details, you may skip a question or stop at any time, and answers are used only for a student research project.','Somos estudiantes de CIEE Monteverde y hacemos una encuesta corta (unos 8 minutos) sobre su viaje: cómo llegó, dónde se hospeda o tiene su base y cuánto cuesta. Es voluntaria y anónima. No pedimos su nombre ni datos de contacto, puede omitir una pregunta o detenerse cuando quiera, y las respuestas se usan solo en un proyecto estudiantil.']],btn:['I agree, start','Acepto, comenzar']},
+{id:'S1',nd:1,t:['Are you 18 or older?','¿Tiene 18 años o más?'],o:YN,end:'No',tally:'under18'},
+{id:'S2',nd:1,t:['Do you live or work in Monteverde?','¿Vive o trabaja en Monteverde?'],o:YN,end:'Yes',tally:'resident'},
+{id:'VisitorType',t:['Will you spend at least one night in Monteverde on this trip?','¿Pasará al menos una noche en Monteverde en este viaje?'],o:[['Overnight','Yes','Sí'],['Day','No, I am visiting for the day','No, la visita es solo por el día']]},
+{id:'A1_Country',sec:'A',type:'country',t:['In which country do you live?','¿En qué país vive?']},
+{id:'A1_State',sec:'A',type:'text',t:['In which state, province or region do you live?','¿En qué estado, provincia o región vive?'],h:['In the country you just named.','En el país que acaba de indicar.']},
+{id:'A2_Adults',sec:'A',type:'num',int:1,min:1,t:['How many adults in your travel party share the costs of this trip, including you?','¿Cuántos adultos de su grupo comparten los gastos de este viaje, incluyéndole?']},
+{id:'A2_Children',sec:'A',type:'num',int:1,min:0,t:['And how many children under 18?','¿Y cuántos menores de 18 años?'],h:['Enter 0 if none.','Escriba 0 si no hay.']},
+{id:'A3_Nights',sec:'A',type:'num',int:1,min:1,max:()=>60,show:a=>!isDay(a),t:['How many nights will you spend in Monteverde on this trip?','¿Cuántas noches pasará en Monteverde en este viaje?']},
+{id:'A4_FirstVisit',sec:'A',o:YN,t:['Is this your first visit to Monteverde?','¿Es su primera visita a Monteverde?']},
+{id:'A5_PastVisits',sec:'A',type:'num',int:1,min:0,show:a=>a.A4_FirstVisit==='No',warn:v=>v>30,t:['Not counting this trip, how many times have you visited Monteverde in the last five years?','Sin contar este viaje, ¿cuántas veces ha visitado Monteverde en los últimos cinco años?'],h:['Enter 0 if none in the last five years.','Escriba 0 si ninguna en los últimos cinco años.']},
+{id:'A6_Organization',sec:'A',t:['How did you organize this trip?','¿Cómo organizó este viaje?'],o:[['Independent','Independently (lodging and transport booked separately)','Por cuenta propia (hospedaje y transporte por separado)'],['Package','Package or all-inclusive (one price covers several items)','Paquete o todo incluido (un precio cubre varios servicios)'],['Study/volunteer group','Study abroad, volunteer or school group','Programa de estudio, voluntariado o grupo escolar']]},
+{id:'A7_OnlyDestination',sec:'A',show:a=>!isDay(a),t:['Is Monteverde the only place you are visiting on this trip, or one of several?','¿Es Monteverde el único lugar que visita en este viaje, o uno de varios?'],o:[['Only Monteverde','Only Monteverde','Solo Monteverde'],['Several places','One of several places','Uno de varios lugares']]},
+{id:'B1_LodgingType',sec:'B',show:a=>!isDay(a),t:['What type of lodging are you staying in?','¿Qué tipo de hospedaje tiene?'],o:[['Hotel/lodge','Hotel or lodge','Hotel o lodge'],['Hostel','Hostel','Hostal'],['Rental/Airbnb','Rental house or Airbnb','Casa de alquiler o Airbnb'],['Homestay','Homestay','Hospedaje con familia'],['Family','Family','Familiares'],['Camping/other','Camping or other','Camping u otro']]},
+{id:'B2_LodgingPerNight',sec:'B',type:'num',money:1,pn:1,show:a=>!isDay(a)&&ind(a),t:['On average, how much do you pay for lodging per night, for your whole travel party?','En promedio, ¿cuánto paga por hospedaje por noche, para todo su grupo?'],h:HW,warn:(v,a)=>v/Math.max(1,party(a))>500},
+{id:'B3_PackagePrice',sec:'B',type:'num',money:1,show:a=>!ind(a),t:['What is the total price of your package or program for your party?','¿Cuál es el precio total de su paquete o programa para su grupo?'],h:['The total price for your party, in dollars or colones (choose above).','El precio total para su grupo, en dólares o colones (elija arriba).']},
+{id:'B4_PackageNights',sec:'B',type:'num',int:1,min:1,show:a=>!ind(a),t:['How many nights in total does the package or program cover, including nights outside Monteverde?','¿Cuántas noches en total cubre su paquete o programa, incluidas las noches fuera de Monteverde?'],td:['How many days does the tour or package cover?','¿Cuántos días cubre el tour o paquete?'],hd:['Enter 1 for a one-day tour.','Escriba 1 si es un tour de un día.']},
+{id:'B5_InclFlights',sec:'B',show:a=>!ind(a)&&!isCR(a),o:YN,t:['Does the package include your international flights?','¿El paquete incluye sus vuelos internacionales?']},
+{id:'B6_Booking',sec:'B',t:['Where did you book your lodging or package?','¿Dónde reservó su hospedaje o paquete?'],td:['Where did you book your tour or trip?','¿Dónde reservó su tour o viaje?'],o:[['Local business or agency','Directly with the business, or a Costa Rican business or agency','Directamente con el negocio, o una empresa o agencia costarricense'],['Online platform','An online platform (Booking.com, Airbnb, Viator, etc.)','Una plataforma en línea (Booking.com, Airbnb, Viator, etc.)'],['Home-country agency','An agency or tour operator in my home country','Una agencia u operador en mi país de origen'],['NA','NA','NA']]},
+{id:'B7_TravelHours',sec:'B',type:'num',dec:1,min:0,max:()=>100,warn:v=>v>60,t:['Roughly how many hours did you spend actually traveling from your home to Monteverde?','Aproximadamente, ¿cuántas horas pasó realmente viajando desde su casa hasta Monteverde?'],h:['Count flights, drives and waiting time. Do not count days you stayed at other places along the way.','Cuente vuelos, trayectos en carro y tiempos de espera. No cuente los días que se quedó en otros lugares en el camino.']},
+{id:'B8_Origin',sec:'B',type:'text',t:['What was the last town or city you stayed in before traveling to Monteverde?','¿Cuál fue el último pueblo o ciudad donde se hospedó antes de viajar a Monteverde?'],h:['If you came straight from home, write your home town or city.','Si vino directamente desde su casa, escriba su pueblo o ciudad de residencia.']},
+{id:'B9_TravelCost',sec:'B',type:'num',money:1,warn:(v,a)=>v/Math.max(1,party(a))>1000,t:['What was the total cost of the transportation for the trip from that place to Monteverde, for your party?','¿Cuál fue el costo total del transporte del viaje desde ese lugar hasta Monteverde, para su grupo?'],h:['Dollars or colones (choose above). Count only this one-way trip to get here (tickets, shuttle, fuel; for a rental car and gas, etc.). Do not include travel onward or back after Monteverde. If your package already covers it, enter 0.','Dólares o colones (elija arriba). Cuente solo este viaje de ida para llegar aquí (boletos, shuttle, combustible; si alquiló auto, el alquiler y la gasolina, etc.). No incluya viajes posteriores a Monteverde ni el regreso. Si su paquete ya lo cubre, escriba 0.']},
+{id:'B10_LocalTransport',sec:'B',type:'num',money:1,pn:1,warn:v=>v>400,unit:['Per day','Por día'],t:['On average, how much do you expect to spend per day on transportation for getting around inside Monteverde?','En promedio, ¿cuánto espera gastar por día en transporte para moverse dentro de Monteverde?'],td:['How much do you expect to spend today on getting around inside Monteverde?','¿Cuánto espera gastar hoy en transporte dentro de Monteverde?'],h:['Taxis, buses, shuttles, fuel. Whole travel party, in US dollars. A rough estimate is fine. Enter 0 if nothing.','Taxis, buses, shuttles, combustible. Todo el grupo, en dólares. Una estimación aproximada está bien. Escriba 0 si nada.']},
+{id:'B11_NightsCR',sec:'B',type:'num',int:1,min:1,max:()=>365,show:a=>!isCR(a)&&a.B5_InclFlights!=='Yes',t:['How many nights in total will you spend in Costa Rica?','¿Cuántas noches en total pasará en Costa Rica?']},
+{id:'B12_Flights',sec:'B',type:'num',money:1,show:a=>!isCR(a)&&a.B5_InclFlights!=='Yes',t:['What did your international round-trip flights cost?','¿Cuánto costaron sus vuelos internacionales de ida y vuelta?'],h:['Total for your whole travel party, in dollars or colones (choose above).','Total para todo su grupo, en dólares o colones (elija arriba).'],warn:(v,a)=>v/Math.max(1,party(a))>4000},
+{id:'B13',sec:'B',type:'multi',opt:1,pn:1,pk:1,money:1,unit:['Per day','Por día'],warn:v=>v>600,t:['On average, how much do you expect to spend per day in Monteverde on each of these?','En promedio, ¿cuánto espera gastar por día en Monteverde en cada uno de estos rubros?'],td:['How much do you expect to spend today in Monteverde on each of these?','¿Cuánto espera gastar hoy en Monteverde en cada uno de estos rubros?'],h:['Whole travel party, in dollars or colones (choose above). Leave blank anything you do not spend on. Optional.','Todo el grupo, en dólares o colones (elija arriba). Deje en blanco lo que no gaste. Opcional.'],f:[
+ {id:'B13_Food',t:['Food and drinks','Comida y bebidas'],h:['Restaurants, cafés and groceries','Restaurantes, cafés y supermercado']},
+ {id:'B13_Activities',t:['Guided tours','Tours guiados'],h:['Hikes, night walks, farm visits. Do not include activities paid with an entrance fee (next line).','Caminatas, caminatas nocturnas, visitas a fincas. No incluya actividades que se pagan con una entrada (línea siguiente).']},
+ {id:'B13_EntranceFees',t:['Entrance fees to reserves and attractions','Entradas a reservas y atractivos'],h:['Include the activities those fees cover (zip-lining, hanging bridges, etc.)','Incluya las actividades que cubren esas entradas (canopy, puentes colgantes, etc.)']},
+ {id:'B13_Shopping',t:['Shopping and souvenirs','Compras y souvenirs']}]},
+{id:'C1_Reason',sec:'C',rand:1,last:'Other',t:['What was the main reason you chose Monteverde?','¿Cuál fue la razón principal por la que eligió Monteverde?'],o:[['Cloud forest/nature/wildlife','Cloud forest, nature and wildlife','Bosque nuboso, naturaleza y vida silvestre'],['Adventure activities','Adventure activities (zip-lining, etc.)','Actividades de aventura (canopy, etc.)'],['Itinerary/recommended','Part of a planned or recommended itinerary','Parte de un itinerario planeado o recomendado'],['Family/friends','Family or friends','Familia o amigos'],['Study/volunteer/work','Study, volunteering or work','Estudio, voluntariado o trabajo'],['Other','Other','Otra']]},
+{id:'C2_Importance',sec:'C',type:'scale',t:['How important was the cloud forest itself in your decision to visit Monteverde?','¿Qué tan importante fue el bosque nuboso en sí en su decisión de visitar Monteverde?'],lo:['Not at all','Nada'],hi:['Extremely','Muchísimo']},
+{id:'C3_ExpectedVisits',sec:'C',type:'num',int:1,min:0,warn:v=>v>20,t:['How many times do you expect to visit Monteverde again in the next five years?','¿Cuántas veces espera volver a visitar Monteverde en los próximos cinco años?'],h:['Enter 0 if none.','Escriba 0 si ninguna.']},
+{id:'SCN',sec:'D',type:'info',nd:1,card:1,t:['A possible future','Un posible futuro'],pv:{Severe:[['Scientists expect that, in the coming decades, the mist and cloud cover that make Monteverde’s forest unique could be reduced. As a result, many of the orchids, mosses, frogs and birds that live only in cloud forests could be substituted by other, more common species from the lowlands. The forest would still be green and protected, but it would look and feel like the ordinary forests found in many other parts of Costa Rica and Latin America. Everything else in Monteverde, including prices, hotels and activities, would stay the same as today.','Los científicos esperan que, en las próximas décadas, la neblina y la nubosidad que hacen único al bosque de Monteverde podrían reducirse. Como resultado, muchas de las orquídeas, musgos, ranas y aves que viven solo en bosques nubosos podrían ser sustituidas por otras especies más comunes de las tierras bajas. El bosque seguiría verde y protegido, pero se vería y se sentiría como los bosques comunes de muchas otras partes de Costa Rica y América Latina. Todo lo demás en Monteverde, incluidos precios, hoteles y actividades, seguiría igual que hoy.'],['People sometimes say they would change their plans and then do not. Please answer as if you were really choosing how to spend your own money and holiday time, keeping in mind other places you could visit instead.','A veces las personas dicen que cambiarían sus planes y luego no lo hacen. Responda como si realmente eligiera cómo gastar su dinero y su tiempo de vacaciones, pensando en otros lugares que podría visitar.']],Moderate:[['Scientists expect that, in the coming decades, the mist and cloud cover that make Monteverde’s forest unique could be reduced. As a result, some of the orchids, mosses, frogs and birds that live only in cloud forests could be replaced by more common species from the lowlands. The forest would still be green and protected and would keep much of its character, but you would see fewer of the species that make it unique. Everything else in Monteverde, including prices, hotels and activities, would stay the same as today.','Los científicos esperan que, en las próximas décadas, la neblina y la nubosidad que hacen único al bosque de Monteverde podrían reducirse. Como resultado, algunas de las orquídeas, musgos, ranas y aves que viven solo en bosques nubosos podrían ser sustituidas por especies más comunes de las tierras bajas. El bosque seguiría verde y protegido y conservaría gran parte de su carácter, pero se verían menos de las especies que lo hacen único. Todo lo demás en Monteverde, incluidos precios, hoteles y actividades, seguiría igual que hoy.'],['People sometimes say they would change their plans and then do not. Please answer as if you were really choosing how to spend your own money and holiday time, keeping in mind other places you could visit instead.','A veces las personas dicen que cambiarían sus planes y luego no lo hacen. Responda como si realmente eligiera cómo gastar su dinero y su tiempo de vacaciones, pensando en otros lugares que podría visitar.']]},btn:['Continue','Continuar']},
+{id:'D1_Scenario',sec:'D',rand:1,alt:{'Same trip':['I would still have come to Monteverde','Habría venido igual a Monteverde']},hide:(c,a)=>c==='Fewer nights'&&isDay(a),t:['If Monteverde’s forest were like that when you planned this trip, what would you have done?','Si el bosque de Monteverde fuera así cuando planeó este viaje, ¿qué habría hecho?'],o:[['Same trip','I would still have come, staying the same number of nights','Habría venido igual, con el mismo número de noches'],['Fewer nights','I would still have come, but stayed fewer nights','Habría venido, pero con menos noches'],['Would not come','I would not have come to Monteverde','No habría venido a Monteverde']]},
+{id:'D2_NightsInstead',sec:'D',type:'num',int:1,min:0,max:a=>a.A3_Nights-1,show:a=>a.D1_Scenario==='Fewer nights'&&!isDay(a),t:['How many nights would you have stayed in Monteverde instead?','¿Cuántas noches se habría quedado en Monteverde en su lugar?']},
+{id:'D3_Substitute',sec:'D',rand:1,show:a=>a.D1_Scenario==='Would not come',t:['Where would you most likely have gone instead?','¿A dónde habría ido más probablemente en su lugar?'],o:[['Other place in Costa Rica','Another place in Costa Rica','Otro lugar en Costa Rica'],['Another country','Another country','Otro país'],['Stay at home','Stayed at home','Me habría quedado en casa']]},
+{id:'E1_Age',sec:'E',t:['What is your age?','¿Cuál es su edad?'],o:['18–24','25–34','35–44','45–54','55–64'].map(x=>[x,x,x]).concat([['65 or older','65 or older','65 o más']])},
+{id:'E2_Gender',sec:'E',t:['What is your gender?','¿Cuál es su género?'],o:[['Woman','Woman','Mujer'],['Man','Man','Hombre'],['Another','Another','Otro'],['Prefer not to say','Prefer not to say','Prefiero no decir']]},
+{id:'E3_Income',sec:'E',t:['Which of these best describes your household’s yearly income before taxes, in US dollars?','¿Cuál de estas opciones describe mejor el ingreso anual de su hogar antes de impuestos, en dólares?'],h:['Optional. Choose “Prefer not to say” if you prefer.','Opcional. Elija “Prefiero no decir” si lo prefiere.'],o:[['Under 25k','Under $25,000','Menos de $25,000'],['25-49k','$25,000–$49,999','$25,000–$49,999'],['50-99k','$50,000–$99,999','$50,000–$99,999'],['100-149k','$100,000–$149,999','$100,000–$149,999'],['150k or more','$150,000 or more','$150,000 o más'],['Prefer not to say','Prefer not to say','Prefiero no decir']]}
+];
+const TT=q=>(isDay(S.a)&&q.td)?q.td:q.t;
+const HH=q=>{let h=(isDay(S.a)&&q.hd)?q.hd:q.h;if(q.pk&&!ind(S.a)){const x=['Leave out anything your package already covers.','No incluya lo que su paquete ya cubre.'];h=h?[h[0]+' '+x[0],h[1]+' '+x[1]]:x}return h};
+const OPTS=q=>q.o.filter(o=>!q.hide||!q.hide(o[0],S.a)).map(o=>(isDay(S.a)&&q.alt&&q.alt[o[0]])?[o[0]].concat(q.alt[o[0]]):o);
+const SEC={A:['Your trip','Su viaje'],B:['Trip costs','Costos del viaje'],C:['Reasons for coming','Razones para venir'],D:['A possible future','Un posible futuro'],E:['About you','Sobre usted']};
+const U={next:['Next','Siguiente'],back:['Back','Atrás'],req:['Please answer to continue.','Responda para continuar.'],num:['Please enter a valid number.','Ingrese un número válido.'],min:['That number is too low.','Ese número es muy bajo.'],max:['That number is too high.','Ese número es muy alto.'],warn:['That seems high. Tap Next again to confirm.','Parece alto. Toque Siguiente de nuevo para confirmar.'],opt:['optional','opcional'],pickc:['Select your country','Seleccione su país'],otherc:['Other (not listed)','Otro (no aparece)'],usd:['Dollars ($)','Dólares ($)'],crc:['Colones (₡)','Colones (₡)'],today:['today','hoy'],forstay:['for the stay','por la estadía'],wholestay:['for the whole stay','por toda la estadía'],forparty:['for your party of','para su grupo de'],perperson:['per person','por persona'],people:['people','personas'],totalday:['Total','Total'],pic:['Illustration','Ilustración'],picL:['Cloud forest today','El bosque nuboso hoy'],picR:['A possible future','Un posible futuro'],night:['Per night','Por noche'],stay:['Whole stay','Toda la estadía'],stayNote:['We will divide your total by your number of nights.','Dividiremos su total entre su número de noches.'],
+thanks:['Thank you!','¡Muchas gracias!'],thanks2:['Enjoy the rest of your stay in Monteverde!','¡Disfrute el resto de su estadía en Monteverde!'],inel:['Thank you for your time','Gracias por su tiempo'],inel2:['This survey is for adult visitors who do not live or work in Monteverde, so we cannot continue. Have a great day!','Esta encuesta es para visitantes adultos que no viven ni trabajan en Monteverde, así que no podemos continuar. ¡Que tenga un excelente día!'],again:['Start a new survey','Iniciar nueva encuesta'],
+sending:['Sending your answers…','Enviando sus respuestas…'],sent:['Your answers were saved.','Sus respuestas se guardaron.'],queued:['Saved on this phone. It will upload automatically when there is a connection.','Guardado en este teléfono. Se enviará automáticamente cuando haya conexión.'],refuse:['Record a refusal','Registrar un rechazo'],refused:['Refusal recorded.','Rechazo registrado.']};
+const COLS=['ID','Date','Time','Location','Surveyor','Language','VisitorType','A1_Country','A1_State','A2_Adults','A2_Children','A3_Nights','A4_FirstVisit','A5_PastVisits','A6_Organization','A7_OnlyDestination','B1_LodgingType','B2_LodgingPerNight','B3_PackagePrice','B4_PackageNights','B5_InclFlights','B6_Booking','B7_TravelHours','B8_Origin','B9_TravelCost','B10_LocalTransport','B11_NightsCR','B12_Flights','B13_Food','B13_Activities','B13_EntranceFees','B13_Shopping','C1_Reason','C2_Importance','C3_ExpectedVisits','D1_Scenario','D2_NightsInstead','D3_Substitute','E1_Age','E2_Gender','E3_Income','DurationSec','C1_Order','D1_Order','D3_Order','SCN_Version'];
+
+/* ===== storage (falls back to memory if the browser blocks it) ===== */
+const mem={};
+const ls={get(k,d){try{const v=localStorage.getItem(k);return v==null?(k in mem?mem[k]:d):JSON.parse(v)}catch(e){return k in mem?mem[k]:d}},set(k,v){mem[k]=v;try{localStorage.setItem(k,JSON.stringify(v))}catch(e){}}};
+const app=document.getElementById('app');
+let S;
+function fresh(){S={lang:S?S.lang:((PARAMS.lang||navigator.language||'en').slice(0,2)==='es'?1:0),lock:0,a:{},h:[],id:'INTRO',view:PARAMS.lang?'q':'lang',t0:Date.now(),warned:null,ord:{},mode:{},cur:null,scn:null,note:''}}
+const el=(t,c,x)=>{const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e};
+const L=x=>x[S.lang];
+const vis=q=>!q.show||q.show(S.a);
+const qi=()=>Q.findIndex(q=>q.id===S.id);
+const rid=()=>(Date.now().toString(36)+Math.random().toString(36).slice(2,6)).toUpperCase();
+function shuffle(a){a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+function orderOf(q){if(!S.ord[q.id]){const codes=OPTS(q).map(o=>o[0]).filter(c=>c!==q.last);S.ord[q.id]=shuffle(codes).concat(q.last?[q.last]:[])}return S.ord[q.id]}
+function nextQ(){for(let i=qi()+1;i<Q.length;i++)if(vis(Q[i]))return Q[i].id;return null}
+function go(){S.lock=0;const n=nextQ();S.warned=null;S.h.push(S.id);if(n){S.id=n;render()}else finish()}
+function back(){if(S.h.length){S.id=S.h.pop();S.warned=null;render()}}
+
+/* ===== money helpers ===== */
+const fm=x=>{const r=Math.round(x*100)/100;return '$'+r.toLocaleString('en-US',{maximumFractionDigits:2})};
+const fc=x=>'₡'+Math.round(x).toLocaleString('en-US');
+const toUSD=n=>S.cur==='CRC'?Math.round(n/FX*100)/100:n;
+const fromUSD=u=>S.cur==='CRC'?Math.round(u*FX):u;
+const daysN=()=>isDay(S.a)?1:(+S.a.A3_Nights||1);
+function parseNum(s){s=s.replace(/[\s$₡]/g,'');
+ if(/^\d{1,3}(,\d{3})+(\.\d+)?$/.test(s))return parseFloat(s.replace(/,/g,''));
+ if(S.cur==='CRC'&&/^\d{1,3}(\.\d{3})+(,\d+)?$/.test(s))return parseFloat(s.replace(/\./g,'').replace(',','.'));
+ if(s===''||s==='.'||s===','||!/^\d*[.,]?\d*$/.test(s))return NaN;
+ return parseFloat(s.replace(',','.'))}
+function scnVer(){if(!S.scn){let n=ls.get('mv_scn_n',null);if(n==null)n=Math.random()<0.5?0:1;S.scn=(n%2===0)?'Severe':'Moderate';ls.set('mv_scn_n',n+1)}return S.scn}
+function tree(x,y,h,w,epi,col){let g='<rect x="'+(x-2)+'" y="'+y+'" width="4" height="'+h+'" fill="#5b4636"/><ellipse cx="'+x+'" cy="'+(y-4)+'" rx="'+w+'" ry="'+(w*0.8)+'" fill="'+col+'"/>';
+ if(epi){[[-w*0.5,-6],[w*0.4,-10],[0,2],[w*0.6,-1],[-w*0.2,-14]].slice(0,epi).forEach((p,i)=>{g+='<circle cx="'+(x+p[0])+'" cy="'+(y+p[1])+'" r="2.4" fill="'+['#e86aa5','#f3a33a','#a05cc7','#f0e04a','#e86aa5'][i]+'"/>'});g+='<path d="M'+(x-w*0.8)+' '+(y+4)+' q '+(w*0.4)+' 8 '+(w*0.9)+' 2" stroke="#4f9a6a" stroke-width="3" fill="none" opacity=".8"/>'}
+ return g}
+function scnSvg(v){const mod=v==='Moderate';let s='<svg viewBox="0 0 360 150" role="img" aria-label="Illustration" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto;border-radius:12px;display:block">';
+ s+='<defs><linearGradient id="gL" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#d7e8e1"/><stop offset="1" stop-color="#9fc9b6"/></linearGradient><linearGradient id="gR" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#9fd3ef"/><stop offset="1" stop-color="#e6f5fa"/></linearGradient></defs>';
+ s+='<rect x="0" y="0" width="176" height="150" fill="url(#gL)"/><rect x="184" y="0" width="176" height="150" fill="url(#gR)"/>';
+ s+='<ellipse cx="40" cy="38" rx="46" ry="9" fill="#fff" opacity=".6"/><ellipse cx="120" cy="58" rx="52" ry="9" fill="#fff" opacity=".55"/><ellipse cx="70" cy="86" rx="60" ry="8" fill="#fff" opacity=".4"/>';
+ s+='<circle cx="326" cy="26" r="13" fill="#fbd75a"/>';
+ if(mod)s+='<ellipse cx="238" cy="40" rx="34" ry="7" fill="#fff" opacity=".55"/>';
+ s+='<rect x="0" y="128" width="176" height="22" fill="#3f7a56"/><rect x="184" y="128" width="176" height="22" fill="#6aa34d"/>';
+ [[22,66,62,24,5,'#2f7a52'],[66,58,70,28,5,'#2a7048'],[112,68,60,24,5,'#2f7a52'],[154,62,66,26,4,'#2a7048']].forEach(t=>{s+=tree(t[0],t[1],t[2],t[3],t[4],t[5])});
+ [[206,76,52,22,mod?3:0,'#7fbf52'],[256,86,42,18,mod?2:0,'#8cc95c'],[304,72,56,24,mod?3:0,'#7fbf52'],[340,90,38,16,0,'#8cc95c']].forEach(t=>{s+=tree(t[0],t[1],t[2],t[3],t[4],t[5])});
+ return s+'</svg>'}
+function scnPic(){const v=scnVer(),f=el('div','pic');
+ if(SCN_IMAGE[v]&&/^https:\/\//.test(SCN_IMAGE[v])){const im=document.createElement('img');im.src=SCN_IMAGE[v];im.alt='';im.style.cssText='width:100%;border-radius:12px;display:block';f.append(im)}
+ else{const w=el('div');w.innerHTML=scnSvg(v);f.append(w)}
+ const cap=el('div','picc');cap.append(el('span','',L(U.picL)),el('span','',L(U.picR)));f.append(cap,el('div','picn',L(U.pic)));return f}
+
+/* ===== sending: Apps Script (google.script.run) or fetch to ENDPOINT, with an offline queue ===== */
+function send(p){
+ if(window.google&&google.script&&google.script.run)
+  return new Promise((res,rej)=>google.script.run.withSuccessHandler(r=>r&&r.ok?res():rej(new Error('rejected'))).withFailureHandler(rej).ingest(JSON.stringify(p)));
+ if(!ENDPOINT)return Promise.reject(new Error('no endpoint'));
+ return fetch(ENDPOINT,{method:'POST',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p)}).then(r=>r.json()).then(j=>{if(!j.ok)throw new Error('rejected')});
+}
+let flushing=null;
+function flush(){
+ if(flushing)return flushing;
+ flushing=(async()=>{let q=ls.get('mv_queue',[]);
+  while(q.length){try{await send(q[0])}catch(e){break}q=ls.get('mv_queue',[]).filter(x=>x.id!==q[0].id);ls.set('mv_queue',q)}
+  return ls.get('mv_queue',[]).length})().finally(()=>{flushing=null});
+ return flushing}
+function enqueue(p){const q=ls.get('mv_queue',[]);q.push(p);ls.set('mv_queue',q);return flush()}
+window.addEventListener('online',()=>flush());
+setInterval(()=>{if(ls.get('mv_queue',[]).length)flush()},30000);
+
+function screenEvent(type){enqueue({kind:'screen',id:'S-'+rid(),type:type,loc:PARAMS.loc||'',sv:PARAMS.sv||''})}
+function finish(){
+ const a=S.a,r={},d=new Date(),p=n=>String(n).padStart(2,'0');
+ r.ID=(PARAMS.loc||'MV')+'-'+rid();
+ r.Date=d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate());r.Time=p(d.getHours())+':'+p(d.getMinutes());
+ r.Location=PARAMS.loc||'';r.Surveyor=PARAMS.sv||'QR';r.Language=S.lang?'Español':'English';
+ for(const q of Q){if(q.nd||!vis(q))continue;if(q.f){for(const f of q.f)if(a[f.id]!==undefined&&a[f.id]!=='')r[f.id]=a[f.id];continue}if(a[q.id]!==undefined&&a[q.id]!=='')r[q.id]=a[q.id]}
+ if(S.scn)r.SCN_Version=S.scn;
+ if(isCR(a))r.A1_Country='Costa Rica';
+ if(isDay(a))r.A3_Nights=0;
+ r.DurationSec=Math.round((Date.now()-S.t0)/1000);
+ for(const k of['C1_Reason','D1_Scenario','D3_Substitute']){const q=Q.find(x=>x.id===k);if(vis(q)&&S.ord[k])r[k==='C1_Reason'?'C1_Order':k==='D1_Scenario'?'D1_Order':'D3_Order']=S.ord[k].join('|')}
+ S.view='done';S.note='sending';render();
+ enqueue({kind:'response',id:r.ID,row:r}).then(n=>{S.note=n?'queued':'sent';const e=document.getElementById('st');if(e)e.textContent=L(U[S.note])})}
+
+/* ===== screens ===== */
+function shell(){app.textContent='';const top=el('div','top'),bar=el('div','bar'),i=el('i');bar.append(i);
+ const lb=el('button','lang',S.lang?'EN':'ES');lb.onclick=()=>{S.lang=1-S.lang;document.documentElement.lang=S.lang?'es':'en';render()};top.append(bar,lb);app.append(top);return i}
+function staffLink(){const b=el('button','link','Staff');b.onclick=()=>{S.view='admin';render()};return b}
+function render(){
+ const prog=shell();
+ if(S.view==='lang'){prog.style.width='2%';const c=el('div','card');c.append(el('h1','','Choose your language / Elija su idioma'));[['English',0],['Español',1]].forEach(([n,i])=>{const b=el('button','opt',n);b.onclick=()=>{S.lang=i;document.documentElement.lang=i?'es':'en';S.view='q';render()};c.append(b)});app.append(c,staffLink());return}
+ if(S.view==='done'||S.view==='inel'){const c=el('div','card');
+  c.append(el('h1','',L(S.view==='done'?U.thanks:U.inel)),el('p','',L(S.view==='done'?U.thanks2:U.inel2)));
+  if(S.view==='done'){const s=el('p','st',L(U[S.note]||U.sending));s.id='st';c.append(s)}
+  const b=el('button','btn',L(U.again));b.onclick=()=>{fresh();render()};c.append(b);app.append(c,staffLink());prog.style.width='100%';return}
+ if(S.view==='admin')return admin(prog);
+ const q=Q[qi()],list=Q.filter(x=>!x.nd&&vis(x));
+ const done=list.filter(x=>Q.indexOf(x)<qi()).length;prog.style.width=(q.id==='INTRO'?2:Math.max(4,(done+(q.nd?0:1))/(list.length+1)*100))+'%';
+ const c=el('div','card'+(q.card?' scn':''));
+ if(q.sec&&!q.card)c.append(el('div','sec',L(SEC[q.sec])));
+ c.append(el('h1','',L(TT(q))));
+ {const ps=q.pv?q.pv[scnVer()]:q.p;if(ps)ps.forEach((x,i)=>{c.append(el('p','',L(x)));if(q.card&&q.pv&&i===0)c.append(scnPic())})}
+ const hh=HH(q);if(hh)c.append(el('p','hint',L(hh)));
+ else if(q.opt)c.append(el('p','hint','('+L(U.opt)+')'));
+ const err=el('div','err'),nav=el('div','nav');const inps=[];
+ const v=S.a[q.id];
+ const pick=val=>{if(S.lock)return;S.lock=1;S.a[q.id]=val;if(q.id==='VisitorType')S.ord={};if(q.end&&val===q.end){screenEvent(q.tally);S.view='inel';return render()}setTimeout(go,180)};
+ if(q.o&&!q.type){const vo=OPTS(q);const opts=q.rand?orderOf(q).map(code=>vo.find(o=>o[0]===code)):vo;
+  opts.forEach(o=>{const b=el('button','opt'+(v===o[0]?' on':''),L(o.slice(1)));b.onclick=()=>{c.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');pick(o[0])};c.append(b)})}
+ else if(q.type==='scale'){const r=el('div','row');for(let n=1;n<=5;n++){const b=el('button','opt'+(v===n?' on':''),String(n));b.onclick=()=>{if(S.lock)return;S.lock=1;S.a[q.id]=n;setTimeout(go,180);r.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));b.classList.add('on')};r.append(b)}
+  const e=el('div','ends');e.append(el('span','',L(q.lo)),el('span','',L(q.hi)));c.append(r,e)}
+ else if(q.type==='country'){
+  const sel=el('select','f');sel.style.cssText='width:100%';const p0=el('option','',L(U.pickc));p0.value='';sel.append(p0);
+  const lang=S.lang?1:0,list=COUNTRIES.map(x=>[x[0],x[lang+0]]).sort((a,b)=>a[1].localeCompare(b[1],lang?'es':'en'));
+  list.forEach(x=>{const o=el('option','',x[1]);o.value=x[0];sel.append(o)});
+  const oo=el('option','',L(U.otherc));oo.value='Other';sel.append(oo);
+  if(S.a[q.id])sel.value=S.a[q.id];inps.push({f:q,i:sel});c.append(sel);setTimeout(()=>sel.focus(),50)}
+ else if(q.type==='text'||q.type==='num'||q.type==='multi'){
+  const money=!!q.money,fields=q.type==='multi'?q.f:[q],echo=el('div','echo');
+  if(money&&!S.cur)S.cur=isCR(S.a)?'CRC':'USD';
+  const sym=()=>S.cur==='CRC'?'₡':'$';
+  const unitS=q.unit?['per day','por día']:['per night','por noche'],unitP=q.unit?['days','días']:['nights','noches'];
+  function upd(){
+   if(!money){return}
+   const vals=inps.map(x=>{const t=x.i.value.trim();return t===''?null:parseNum(t)}).filter(v=>v!=null&&!isNaN(v));
+   if(!vals.length){echo.style.display='none';echo.textContent='';return}
+   const nat=vals.reduce((p,v)=>p+v,0),usd=toUSD(nat),lead=S.cur==='CRC'?fc(nat)+' ≈ '+fm(usd)+'. ':'',stay=q.pn&&!isDay(S.a)&&S.mode[q.id]==='stay',N=daysN();
+   let t;
+   if(q.pn){
+    const tot=q.type==='multi'?L(U.totalday)+': ':'';
+    if(isDay(S.a))t=tot+fm(usd)+' '+L(U.today);
+    else if(stay)t=fm(usd)+' '+L(U.wholestay)+' ÷ '+N+' '+L(unitP)+' = '+fm(usd/N)+' '+L(unitS);
+    else t=tot+fm(usd)+' '+L(unitS)+' × '+N+' '+L(unitP)+' = '+fm(usd*N)+' '+L(U.forstay)}
+   else{const P=Math.max(1,party(S.a));t=fm(usd)+' '+L(U.forparty)+' '+P+(P===1?'':' ')+(P===1?'':L(U.people))+' = '+fm(usd/P)+' '+L(U.perperson)}
+   echo.textContent=lead+t;echo.style.display='block'}
+  if(money){const sg=el('div','seg');['USD','CRC'].forEach(k=>{const b=el('button','opt'+(S.cur===k?' on':''),L(U[k.toLowerCase()]));b.onclick=()=>{S.cur=k;sg.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');inps.forEach(x=>{if(x.pre)x.pre.textContent=sym()});upd()};sg.append(b)});c.append(sg)}
+  if(q.pn&&!isDay(S.a)){const sg=el('div','seg'),nt=el('p','hint',''),mk=m=>{const b=el('button','opt'+((S.mode[q.id]||'night')===m?' on':''),(m==='night'&&q.unit)?L(q.unit):L(U[m]));b.onclick=()=>{S.mode[q.id]=m;sg.querySelectorAll('.opt').forEach(x=>x.classList.remove('on'));b.classList.add('on');nt.textContent=m==='stay'?L(U.stayNote):'';upd()};return b};sg.append(mk('night'),mk('stay'));c.append(sg,nt);nt.textContent=S.mode[q.id]==='stay'?L(U.stayNote):''}
+  fields.forEach((f,ix)=>{
+   if(q.type==='multi'){c.append(el('label','flab',L(f.t)));if(f.h)c.append(el('p','fh',L(f.h)))}
+   const w=el('div',money?'pre':''),pre=money?el('span','',sym()):null;if(pre)w.append(pre);
+   const inp=el('input','f');inp.type='text';inp.inputMode=(money||q.dec)?'decimal':q.int?'numeric':'text';inp.autocomplete='off';
+   if(q.list){inp.setAttribute('list','cl');const dl=el('datalist');dl.id='cl';['Costa Rica','United States','Canada','Mexico','United Kingdom','Germany','France','Netherlands','Spain','Colombia','Panama','Australia'].forEach(x=>{const o=el('option');o.value=x;dl.append(o)});c.append(dl)}
+   const v0=S.a[f.id];if(v0!==undefined)inp.value=(money&&typeof v0==='number')?fromUSD(v0):v0;
+   inp.oninput=upd;inp.onkeydown=e=>{if(e.key==='Enter'){if(ix<fields.length-1)inps[ix+1].i.focus();else next()}};
+   w.append(inp);c.append(w);inps.push({f,i:inp,pre})});
+  c.append(echo);const inp=inps[0].i;upd();setTimeout(()=>inp.focus(),50)}
+ function next(){
+  err.textContent='';
+  const money=!!q.money,stay=q.pn&&!isDay(S.a)&&S.mode[q.id]==='stay';
+  const conv=n=>{let u=money?toUSD(n):n;if(stay&&S.a.A3_Nights>0)u=Math.round(u/S.a.A3_Nights*100)/100;return u};
+  if(q.type==='multi'){
+   const out={};let sum=0;
+   for(const x of inps){const t=x.i.value.trim();if(t==='')continue;const n=parseNum(t);
+    if(isNaN(n)){err.textContent=L(U.num);return}
+    if(n<0){err.textContent=L(U.min);return}
+    const u=conv(n);out[x.f.id]=u;sum+=u}
+   if(q.warn&&q.warn(sum,S.a)&&S.warned!==q.id){S.warned=q.id;err.textContent=L(U.warn);return}
+   for(const x of inps){if(out[x.f.id]!==undefined)S.a[x.f.id]=out[x.f.id];else delete S.a[x.f.id]}
+   S.mode[q.id]='night';return go()}
+  if(q.type==='country'){const v=inps[0].i.value;if(!v){err.textContent=L(U.req);return}S.a[q.id]=v;return go()}
+  if(q.type==='text'||q.type==='num'){const inp=inps[0].i;let s=inp.value.trim();
+   if(s===''){if(q.opt){delete S.a[q.id];return go()}err.textContent=L(U.req);return}
+   if(q.type==='num'){const n=parseNum(s);
+    if(isNaN(n)||(q.int&&!Number.isInteger(n))){err.textContent=L(U.num);return}
+    if(n<(q.min??0)){err.textContent=L(U.min);return}
+    if(q.max&&n>q.max(S.a)){err.textContent=L(U.max);return}
+    const nn=conv(n);
+    if(q.warn&&q.warn(nn,S.a)&&S.warned!==q.id){S.warned=q.id;err.textContent=L(U.warn);return}
+    S.mode[q.id]='night';S.a[q.id]=nn}else S.a[q.id]=s;return go()}
+  go()}
+ if(q.type==='info'){if(q.id!=='INTRO'){const k=el('button','btn g',L(U.back));k.onclick=back;nav.append(k)}const b=el('button','btn',L(q.btn));b.onclick=go;nav.append(b)}
+ else{if(S.h.length&&q.id!=='S1'){const b=el('button','btn g',L(U.back));b.onclick=back;nav.append(b)}
+  if(q.type==='text'||q.type==='num'||q.type==='multi'||q.type==='country'){const b=el('button','btn',L(U.next));b.onclick=next;nav.append(b)}}
+ c.append(err,nav);app.append(c);
+ if(q.id==='INTRO'){
+  if(PARAMS.sv){const rb=el('button','link',L(U.refuse));rb.onclick=()=>{screenEvent('refusal');rb.textContent=L(U.refused);rb.disabled=true};app.append(rb)}
+  app.append(staffLink())}
+ window.scrollTo(0,0)}
+function admin(prog){
+ prog.style.width='100%';const c=el('div','card');c.append(el('h1','','Staff'));
+ const n=ls.get('mv_queue',[]).length;
+ const tb=el('table');[['Location',PARAMS.loc||'(none)'],['Surveyor',PARAMS.sv||'(none)'],['Waiting to upload from this phone',n]].forEach(r=>{const tr=el('tr');tr.append(el('td','',r[0]),el('td','',String(r[1])));tb.append(tr)});c.append(tb);
+ c.append(el('p','hint','Answers upload automatically. Completed surveys appear as rows in the Responses sheet; screening outcomes in the Screening sheet.'));
+ const nav=el('div','nav');const sb=el('button','btn','Upload now');sb.onclick=async()=>{sb.textContent='…';await flush();admin(prog);render()};
+ const bk=el('button','btn g','← Survey');bk.onclick=()=>{fresh();render()};nav.append(sb,bk);c.append(nav);app.append(c)}
+fresh();document.documentElement.lang=S.lang?'es':'en';render();flush();
+</script></body></html>
